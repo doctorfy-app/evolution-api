@@ -1501,6 +1501,27 @@ export class BaileysStartupService extends ChannelStartupService {
               where: { id: findMessage.id },
               data: { status: status[update.status] },
             });
+          } else if (update.message?.editedMessage) {
+            await this.prismaRepository.message.update({
+              where: { id: findMessage.id },
+              data: {
+                message: {
+                  ...findMessage.message,
+                  conversation: update.message.editedMessage.message.conversation,
+                },
+              },
+            });
+
+            const updateMessage = {
+              instanceId: this.instanceId,
+              key,
+              message: {
+                conversation: update.message.editedMessage.message.conversation,
+              },
+            };
+
+            this.sendDataWebhook(Events.MESSAGES_UPDATE, updateMessage);
+            return;
           }
 
           const message: any = {
